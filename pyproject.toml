@@ -1,0 +1,14 @@
+[project]
+name = "pdf-extraction-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.135.1",
+    "marker-pdf>=1.10.2",
+    "pydantic-settings>=2.13.1",
+    "python-multipart>=0.0.22",
+    "structlog>=25.5.0",
+    "uvicorn>=0.41.0",
+]
