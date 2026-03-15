@@ -68,7 +68,7 @@ def configure_logging(
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(console_level)
     console_handler.setFormatter(console_formatter)
-    console_handler.addFilter(HealthCheckFilter())
+    console_handler.addFilter(_HealthCheckFilter())
     root.addHandler(console_handler)
 
     _ensure_log_dir(log_path)
@@ -98,9 +98,13 @@ def get_logger(name: str = __name__) -> structlog.stdlib.BoundLogger:
 
 
 def _ensure_log_dir(log_path: str) -> None:
+    """Create the log directory if it does not exist."""
     Path(log_path).parent.mkdir(parents=True, exist_ok=True)
 
 
-class HealthCheckFilter(logging.Filter):
+class _HealthCheckFilter(logging.Filter):
+    """Filter out health-check log entries to reduce noise."""
+
     def filter(self, record: logging.LogRecord) -> bool:
+        """Return False for health-check requests to suppress them."""
         return "GET /health" not in record.getMessage()

@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import structlog
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -22,7 +23,8 @@ logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager    
-async def lifespan(app: FastAPI):
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan: load models, warmup, and start background workers."""
     
     # load models
     converter = PDFConverter(torch_device=settings.torch_device)
@@ -47,11 +49,12 @@ async def lifespan(app: FastAPI):
     cleanup_task.cancel()
     logger.info("worker_tasks_cancelled")
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=_lifespan)
 
 
-@app.post("/converter", status_code=202)
-async def convert_pdf(file: UploadFile):
+@app.post("/converter", status_code=202, response_model=None)
+async def convert_pdf(file: UploadFile) -> JobResponse | JSONResponse:
+    """Accept a PDF upload and enqueue it for conversion."""
     pdf_bytes = await file.read()
     
     if not pdf_bytes:
@@ -80,7 +83,8 @@ async def convert_pdf(file: UploadFile):
 
 
 @app.get("/result/{job_id}", response_model=JobResponse)
-async def get_result(job_id: str):
+async def get_result(job_id: str) -> JobResponse:
+    """Return the current status of a conversion job."""
     job = app.state.job_manager.get_job(job_id)
     
     if job is None:
@@ -94,7 +98,8 @@ async def get_result(job_id: str):
 
 
 @app.get("/document/{job_id}", response_model=Document)
-async def get_document(job_id: str):
+async def get_document(job_id: str) -> Document:
+    """Retrieve the extracted document by job ID."""
     async with async_session() as session:
         document = await repository.get_by_job_id(session, job_id)
     
@@ -105,5 +110,6 @@ async def get_document(job_id: str):
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
+    """Liveness probe endpoint."""
     return {"status": "ok"}

@@ -6,6 +6,7 @@ from src.schemas import Document
 
 
 async def save(session: AsyncSession, document: Document) -> None:
+    """Persist a Document to the database."""
     model = DocumentModel(
         job_id=document.job_id,
         content_hash=document.content_hash,
@@ -22,6 +23,7 @@ async def save(session: AsyncSession, document: Document) -> None:
 
 
 async def get_by_job_id(session: AsyncSession, job_id: str) -> Document | None:
+    """Fetch a document by job ID, or return None."""
     result = await session.execute(
         select(DocumentModel).where(DocumentModel.job_id == job_id)
     )
@@ -30,6 +32,7 @@ async def get_by_job_id(session: AsyncSession, job_id: str) -> Document | None:
 
 
 async def get_by_hash(session: AsyncSession, content_hash: str) -> Document | None:
+    """Fetch a document by content hash, or return None."""
     result = await session.execute(
         select(DocumentModel).where(DocumentModel.content_hash == content_hash)
     )
@@ -38,6 +41,7 @@ async def get_by_hash(session: AsyncSession, content_hash: str) -> Document | No
 
 
 def _to_document(model: DocumentModel) -> Document:
+    """Convert a DocumentModel ORM instance to a Document schema."""
     return Document(
         job_id=model.job_id,
         content_hash=model.content_hash,
