@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${DB_NAME:-pdf_extraction_db}
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-pdf_extraction_db}
+    ports:
+      - "${DB_PORT:-5431}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pdf-extraction-network
+    restart: unless-stopped
+
+  pdf_extraction:
+    build: .
+    container_name: pdf_extraction_service
+    ports:
+      - "8503:8503"
+    env_file:
+      - .env
+    environment:
+      - TZ=${TZ:-America/Sao_Paulo}
+      - TORCH_DEVICE=${TORCH_DEVICE}
+      - DB_HOST=pdf_extraction_db
+      - DB_PORT=5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - pdf-extraction-network
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+
+networks:
+  pdf-extraction-network:
+    external: true
