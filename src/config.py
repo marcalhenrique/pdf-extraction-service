@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 class Settings(BaseSettings):
-    
     log_level: str = "DEBUG"
     timezone: str = "UTC"
     
@@ -15,11 +14,23 @@ class Settings(BaseSettings):
     torch_device: str = "cuda"
     job_ttl_minutes: int = 30
     
+    db_host: str = "localhost"
+    db_port: int = 5431
+    db_user: str = "postgres"
+    db_password: str = "postgres"
+    db_name: str = "pdf_extraction_db"
+    
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    
+    @property
+    def db_url(self) -> str:
+        return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+    
 
 @lru_cache()
 def get_settings() -> Settings:
@@ -30,6 +41,5 @@ def get_settings() -> Settings:
             time.tzset()
     except Exception as e:
         pass
-    os.environ["TORCH_DEVICE"] = settings.torch_device
-    return settings
     
+    return settings
