@@ -20,6 +20,8 @@ logger = structlog.get_logger(__name__)
 
 @dataclass
 class Job:
+    """Internal representation of a queued conversion job."""
+
     job_id: str
     pdf_bytes: bytes
     source: str
@@ -29,13 +31,16 @@ class Job:
     error: str | None = None
 
 class JobManager():
-    
-    def __init__(self):
-        self._queue = asyncio.Queue(maxsize=settings.queue_maxsize)
+    """Manages the job queue, processing pipeline, and job lifecycle."""
+
+    def __init__(self) -> None:
+        """Initialize queue, job store, and database session factory."""
+        self._queue: asyncio.Queue[Job] = asyncio.Queue(maxsize=settings.queue_maxsize)
         self._jobs: dict[str, Job] = {}
         self._session: async_sessionmaker = async_session
         
     def enqueue(self, pdf_bytes: bytes, source: str) -> str:
+        """Create a job and add it to the processing queue."""
         job_id = uuid4().hex[:12]
         job = Job(
             job_id=job_id,
@@ -56,9 +61,11 @@ class JobManager():
     
     
     def get_job(self, job_id: str) -> Job | None:
+        """Return a job by its ID, or None if not found."""
         return self._jobs.get(job_id)
     
     async def process_queue(self, converter: PDFConverter) -> None:
+        """Continuously process jobs from the queue."""
         logger.info("worker_started") 
         while True:
             job = await self._queue.get()
@@ -92,6 +99,7 @@ class JobManager():
                 self._queue.task_done()
     
     async def cleanup_old_jobs(self) -> None:
+        """Periodically remove expired jobs from memory."""
         while True:
             await asyncio.sleep(300)
             cutoff = datetime.datetime.now().timestamp() - settings.job_ttl_minutes * 60
@@ -100,6 +108,7 @@ class JobManager():
                 logger.info("old_jobs_removed", count=removed)
     
     def _remove_expired_jobs(self, cutoff: float) -> int:
+        """Delete jobs past the cutoff timestamp and return the count removed."""
         expired = [
             job_id for job_id, job in list(self._jobs.items())
             if job.status in (JobStatus.DONE, JobStatus.ERROR)

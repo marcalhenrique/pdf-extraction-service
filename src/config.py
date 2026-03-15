@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 class Settings(BaseSettings):
+    """Application settings loaded from environment variables and .env file."""
+
     log_level: str = "DEBUG"
     timezone: str = "UTC"
     
@@ -29,11 +31,13 @@ class Settings(BaseSettings):
     
     @property
     def db_url(self) -> str:
+        """Build the async PostgreSQL connection URL."""
         return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
     
 
 @lru_cache()
 def get_settings() -> Settings:
+    """Return cached application settings singleton."""
     settings = Settings()
     try:
         if settings.timezone:

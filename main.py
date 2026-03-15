@@ -11,7 +11,8 @@ configure_logging(
 )
 logger = logging.getLogger(__name__)
 
-def main():
+def main() -> None:
+    """Start the Uvicorn server with configured host and port."""
     uvicorn.run(app, host=settings.host, port=settings.port)
 
 if __name__ == "__main__":

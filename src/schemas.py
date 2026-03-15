@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 
 class JobStatus(str, Enum):
+    """Possible states of a conversion job."""
+
     QUEUED = "QUEUED"
     PROCESSING = "PROCESSING"
     DONE = "DONE"
@@ -15,12 +17,16 @@ class JobStatus(str, Enum):
 
 
 class JobResponse(BaseModel):
+    """API response representing the current state of a job."""
+
     job_id: str
     status: JobStatus
     error: str | None = None
 
 
 class Document(BaseModel):
+    """Extracted document with content and metadata."""
+
     job_id: str
     content_hash: str
     title: str

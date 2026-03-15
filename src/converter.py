@@ -11,14 +11,17 @@ from src.schemas import Document
 logger = structlog.get_logger(__name__)
 
 class PDFConverter:
-    
+    """Converts PDF files to Markdown using Marker."""
+
     def __init__(self, torch_device: str) -> None:
+        """Initialize the converter and load Marker models."""
         config = {"device": torch_device}
         self._converter = PdfConverter(artifact_dict=create_model_dict(device=torch_device), config=config)
         
         logger.info("PDFExtractor initialized", torch_device=torch_device)
         
     def convert(self, pdf_bytes: bytes, source: str, job_id: str) -> Document:
+        """Convert PDF bytes to a Document with Markdown content."""
         
         if not pdf_bytes:
             raise ValueError("PDF bytes cannot be empty")
@@ -60,6 +63,7 @@ class PDFConverter:
             return document
     
     def _extract_title(self,markdown: str, fallback: str) -> str:
+        """Extract the first H1 heading from markdown, or return fallback."""
         
         for line in markdown.splitlines():
             stripped = line.strip()
