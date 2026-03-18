@@ -3,6 +3,8 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Docker bind mount data
+data/
 # C extensions
 *.so
 
