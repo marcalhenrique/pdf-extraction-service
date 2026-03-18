@@ -25,12 +25,13 @@ def upgrade() -> None:
     sa.Column('job_id', sa.String(length=12), nullable=False),
     sa.Column('content_hash', sa.String(length=16), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
-    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('content_url', sa.String(), nullable=False),
+    sa.Column('images_url', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('source', sa.String(), nullable=False),
     sa.Column('language', sa.String(), nullable=True),
-    sa.Column('metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('processing_time_ms', sa.Integer(), nullable=True),
-    sa.Column('processed_at', sa.DateTime(), nullable=False),
+    sa.Column('processed_at', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('job_id')
     )
     op.create_index(op.f('ix_documents_content_hash'), 'documents', ['content_hash'], unique=True)

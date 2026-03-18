@@ -1,5 +1,3 @@
-import os
-import time
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
@@ -7,7 +5,6 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables and .env file."""
 
     log_level: str = "DEBUG"
-    timezone: str = "UTC"
     
     host: str = "0.0.0.0"
     port: int = 8503
@@ -22,6 +19,14 @@ class Settings(BaseSettings):
     db_password: str = "postgres"
     db_name: str = "pdf_extraction_db"
     
+    minio_host: str = "minio"
+    minio_port: int = 9000
+    minio_access_key: str = "minioadmin"
+    minio_secret_key: str = "minioadmin"
+    minio_bucket: str = "pdf-extraction-service"
+    minio_public_url: str = "http://minio:9000"
+    
+    webhook_url: str | None = None
     
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -38,12 +43,4 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Return cached application settings singleton."""
-    settings = Settings()
-    try:
-        if settings.timezone:
-            os.environ["TZ"] = settings.timezone
-            time.tzset()
-    except Exception as e:
-        pass
-    
-    return settings
+    return Settings()
